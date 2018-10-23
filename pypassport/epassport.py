@@ -23,7 +23,7 @@ from pypassport import openssl
 from pypassport import iso7816
 from pypassport import logger
 from pypassport import apdu
-import os
+import os, traceback
 
 class EPassportException(Exception):
     def __init__(self, *params):
@@ -390,6 +390,7 @@ class EPassport(dict, logger.Logger):
                 raise datagroup.DataGroupException("The data group '" + str(tag) + "' does not exist")
             except Exception as msg:
                 self.log(msg)
+                traceback.print_exc()
         else:
             return super(EPassport, self).__getitem__(tag)
     

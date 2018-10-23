@@ -22,6 +22,7 @@ from Crypto.Cipher import DES3, DES
 from pypassport.hexfunctions import *
 from pypassport.asn1 import *
 from pypassport.logger import Logger
+import struct
 
 class Ciphering(Logger):
     def __init__(self):
@@ -36,7 +37,9 @@ class Ciphering(Logger):
 class SecureMessagingException(Exception):
     def __init__(self, *params):
         Exception.__init__(self, *params)
-
+    def __getitem__(self, i):
+        return self.args[i]
+        
 class SecureMessaging(Ciphering):
     """ 
     This class implement the secure messaging protocol.
@@ -56,8 +59,8 @@ class SecureMessaging(Ciphering):
         """
         
         cmdHeader = self._maskClassAndPad(apdu)
-        do87 = ""
-        do97 = ""
+        do87 = b""
+        do97 = b""
         
         tmp = "Concatenate CmdHeader"
         if(apdu.getData()):
@@ -107,10 +110,10 @@ class SecureMessaging(Ciphering):
         Unprotect the APDU following the iso7816 specification
         """
         needCC = False
-        do87 = ""
+        do87 = b""
         do87Data = None
-        do99 = ""
-        do8e = ""
+        do99 = b""
+        do8e = b""
         offset = 0
         
         #Check for a SM error
@@ -118,17 +121,17 @@ class SecureMessaging(Ciphering):
             return rapdu
         
         rapdu = rapdu.getBinAPDU()
-        
+        self.log(rapdu)
         self.log("Receive response APDU of MRTD's chip")
         self.log("\tRAPDU: " + binToHexRep(rapdu))
         
         #DO'87'
         #Mandatory if data is returned, otherwise absent
-        if rapdu[0] == hexRepToBin("87"):
+        if rapdu[0:1] == hexRepToBin("87"):
             (encDataLength, o) = asn1Length(rapdu[1:])
             offset = 1 + o
                         
-            if rapdu[offset] != hexRepToBin("01"):
+            if rapdu[offset:offset+1] != hexRepToBin("01"):
                 raise SecureMessagingException("DO87 malformed, must be 87 L 01 <encdata> : " + binToHexRep(rapdu))
             
             do87 = rapdu[0:offset+encDataLength]
@@ -147,10 +150,11 @@ class SecureMessaging(Ciphering):
         if do99[0:2] != hexRepToBin("9902"):
             #SM error, return the error code
             return ResponseAPDU([], sw1, sw2)
-        
+
+        self.log(rapdu[offset])    
         #DO'8E'
-        #Mandatory id DO'87' and/or DO'99' is present
-        if rapdu[offset] == hexRepToBin("8E"):
+        #Mandatory if DO'87' and/or DO'99' is present
+        if rapdu[offset:offset+1] == hexRepToBin("8E"):
             ccLength = binToHex(rapdu[offset+1])
             CC = rapdu[offset+2:offset+2+ccLength]
             do8e = rapdu[offset:offset+2+ccLength]
@@ -183,13 +187,13 @@ class SecureMessaging(Ciphering):
             if not res:
                 raise SecureMessagingException("Invalid checksum for the rapdu : " + str(binToHex(rapdu)))
                        
-        elif needCC:
+        elif needCC:         
             raise SecureMessagingException("Mandatory id DO'87' and/or DO'99' is present")
         
         data = []
         if(do87Data):
             #There is a payload
-            tdes= DES3.new(self._ksenc,DES.MODE_CBC)
+            tdes= DES3.new(self._ksenc,DES.MODE_CBC,b'\0'*8)
             data = unpad(tdes.decrypt(do87Data))
             self.log("Decrypt data of DO'87 with KSenc")
             self.log("\tDecryptedData: " + binToHexRep(data))
@@ -204,15 +208,15 @@ class SecureMessaging(Ciphering):
         return res
     
     def _buildD087(self, apdu):
-        cipher = "\x01" + self._padAndEncryptData(apdu)
-        res = "\x87" + toAsn1Length(len(cipher)) + cipher
+        cipher = b"\x01" + self._padAndEncryptData(apdu)
+        res = b"\x87" + toAsn1Length(len(cipher)) + cipher
         self.log("Build DO'87")
         self.log("\tDO87: " + binToHexRep(res))
         return res
     
     def _padAndEncryptData(self, apdu):
         """ Pad the data, encrypt data with KSenc and build DO'87"""
-        tdes= DES3.new(self._ksenc,DES.MODE_CBC) 
+        tdes= DES3.new(self._ksenc,DES.MODE_CBC,b'\0'*8) 
         paddedData = pad( hexRepToBin(apdu.getData()))
         enc = tdes.encrypt( paddedData )
         self.log("Pad data")

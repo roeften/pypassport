@@ -24,7 +24,9 @@ from pypassport.logger import Logger
 class Iso7816Exception(Exception):
     def __init__(self, *params):
         Exception.__init__(self, *params)
-
+    def __getitem__(self, i):
+        return self.args[i]
+        
 class Iso7816(Logger):
     
     Errors = {
@@ -44,7 +46,7 @@ class Iso7816(Logger):
                       0x87:'Non Volatile memory not available',\
                       0x88:'Key number not valid',\
                       0x89:'Key length is not correct',\
-                      0xC:'Counter provided by X (valued from 0 to 15) (exact meaning depending on the command)'},
+                      0xC0:'Counter provided by X (valued from 0 to 15) (exact meaning depending on the command)'},
                 0x64:'State of non-volatile memory unchanged (SW2=00, other values are RFU)',
                 0x65:{0x00:'No information given',\
                       0x81:'Memory failure'},
@@ -120,13 +122,12 @@ class Iso7816(Logger):
             if self._ciphering:
                 self.log("[SM] " + str(res))
                 res = self._ciphering.unprotect(res)
-            
             msg = Iso7816.Errors[res.sw1][res.sw2]
             
             self.log(str(res)+" //" + msg)
             
             if msg == "Success":
-                return res.res
+                return rawbytes(res.res)
             else:
                 raise Iso7816Exception(msg, res.sw1, res.sw2)
         except KeyError as k:
@@ -136,7 +137,7 @@ class Iso7816(Logger):
         self._ciphering = c 
             
     def selectFile(self, p1, p2, file="", cla="00", ins="A4"):
-        lc = hexToHexRep(len(file)/2)
+        lc = hexToHexRep(int(len(file)/2))
         toSend = apdu.CommandAPDU(cla, ins, p1, p2, lc, file, "")   
         return self.transmit(toSend, "Select File")
     

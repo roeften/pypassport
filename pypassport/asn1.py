@@ -45,11 +45,11 @@ def asn1Length(data):
     @raise asn1Exception: If the parameter does not follow the asn.1 notation.
 
     """
-    if data[0] <= "\x7F":
+    if data[0] <= 0x7F:
         return (binToHex(data[0]), 1)
-    if data[0] == "\x81":
+    if data[0] == 0x81:
         return (binToHex(data[1]), 2)
-    if data[0] == "\x82":
+    if data[0] == 0x82:
         return (binToHex(data[1:3]), 3)
     
     raise asn1Exception("Cannot decode the asn1 length from this field: " + binToHexRep(data))
@@ -71,12 +71,12 @@ def toAsn1Length(data):
     @rtype: A binary string
     @raise asn1Exception: If the parameter is too big, must be >= 0 and <= FFFF
     """
-    if data <= binToHex("\x7F"):
+    if data <= binToHex(b"\x7F"):
         return hexToBin(data)
-    if data >= binToHex("\x80") and data <= binToHex("\xFF"):
-        return "\x81" + hexRepToBin( "%02x" % data)
-    if data >= binToHex("\x01\x00") and data <= binToHex("\xFF\xFF"):
-        return "\x82" + hexRepToBin("%04x" % data)
+    if data >= binToHex(b"\x80") and data <= binToHex(b"\xFF"):
+        return b"\x81" + hexRepToBin( "%02x" % data)
+    if data >= binToHex(b"\x01\x00") and data <= binToHex(b"\xFF\xFF"):
+        return b"\x82" + hexRepToBin("%04x" % data)
     
     raise asn1Exception("The value is too big, must be <= FFFF")
 

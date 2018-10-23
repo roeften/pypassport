@@ -155,7 +155,8 @@ class PcscReader(Reader):
             self.readerName = self.getReaderList()[rn]
             try:
                 self._pcsc_connection = self.getReaderList()[rn].createConnection()
-                self._pcsc_connection.connect(self.sc.scard.SCARD_PCI_T0)
+                # self.sc.scard.SCARD_PCI_T0
+                self._pcsc_connection.connect()
                 return True
             except self.sc.Exceptions.NoCardException as msg:
                 return False

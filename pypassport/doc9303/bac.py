@@ -16,7 +16,7 @@
 # License along with pyPassport.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import os
+import os, struct
 
 from Crypto.Cipher import DES3
 from Crypto.Cipher import DES
@@ -27,13 +27,15 @@ from pypassport.logger import Logger
 from pypassport.hexfunctions import *
 from pypassport.iso9797 import *
 from pypassport import apdu
-from pypassport.hexfunctions import hexToHexRep, binToHexRep
+from pypassport.hexfunctions import hexToHexRep, binToHexRep, rawbytes
 from pypassport.iso7816 import Iso7816
 
 class BACException(Exception):
     def __init__(self, *params):
         Exception.__init__(self, *params)
-
+    def __getitem__(self, i):
+        return self.args[i]
+        
 class BAC(Logger):
     
     """  
@@ -41,8 +43,8 @@ class BAC(Logger):
     The main method is I{authenticationAndEstablishmentOfSessionKeys}, it will execute the whole protocol and return the set of keys.
     """
     
-    KENC= '\0\0\0\1'
-    KMAC= '\0\0\0\2'
+    KENC= b'\0\0\0\1'
+    KMAC= b'\0\0\0\2'
     
     def __init__(self, iso7816):
         """  
@@ -86,16 +88,18 @@ class BAC(Logger):
         try:
             self.derivationOfDocumentBasicAccesKeys(mrz)
             rnd_icc = self._iso7816.getChallenge()
+            
             cmd_data = self.authentication(rnd_icc)
             data = self._mutualAuthentication(cmd_data)
             return self.sessionKeys(data)
         except Exception as msg:
-            raise BACException(msg[0])
+            raise msg
         
     def _mutualAuthentication(self, cmd_data):
         data = binToHexRep(cmd_data)
         lc = hexToHexRep(len(data)/2) 
         toSend = apdu.CommandAPDU("00", "82", "00", "00", lc, data, "28")
+        
         return self._iso7816.transmit(toSend, "Mutual Authentication")
        
     def _computeKeysFromKseed(self, Kseed):
@@ -156,6 +160,8 @@ class BAC(Logger):
         @type rnd_icc: A 8 bytes binary string
         @return: The APDU binary data for the mutual authenticate command   
         """
+        if(type(rnd_icc) == str):
+            rnd_icc = rawbytes(rnd_icc)
         self._rnd_icc = rnd_icc
         self.log("Request an 8 byte random number from the MRTD's chip")
         self.log("\tRND.ICC: " + binToHexRep(self._rnd_icc))
@@ -164,16 +170,19 @@ class BAC(Logger):
             rnd_ifd = os.urandom(8)
         if not kifd:
             kifd = os.urandom(16)
-        
         self.log("Generate an 8 byte random and a 16 byte random")
         self.log("\tRND.IFD: " + binToHexRep(rnd_ifd))
         self.log("\tRND.Kifd: " + binToHexRep(kifd))
-             
-        s = rnd_ifd + self._rnd_icc + kifd    
+
+        
+		
+        s = rnd_ifd + self._rnd_icc + kifd
+        
         self.log("Concatenate RND.IFD, RND.ICC and Kifd")       
         self.log("\tS: " + binToHexRep(s))
          
-        tdes= DES3.new(self._ksenc,DES.MODE_CBC)
+        tdes= DES3.new(self._ksenc,DES.MODE_CBC,b'\0'*8)
+
         eifd= tdes.encrypt(s)
         self.log("Encrypt S with TDES key Kenc as calculated in Appendix 5.2")
         self.log("\tEifd: " + binToHexRep(eifd))
@@ -201,12 +210,11 @@ class BAC(Logger):
         @type data: a binary string
         @return: A set of two 16 bytes keys (KSenc, KSmac) and the SSC 
         """
+        self.log("Decrypt and verify received data and compare received RND.IFD with generated RND.IFD " + binToHexRep(self._ksmac))
+        # mac(self._ksmac, data[0:32]) != data[32:]:
+        #    raise Exception("The MAC value is not correct")
         
-        self.log("Decrypt and verify received data and compare received RND.IFD with generated RND.IFD")
-        if mac(self._ksmac, pad(data[0:32])) != data[32:]:
-            raise Exception("The MAC value is not correct")
-        
-        tdes= DES3.new(self._ksenc,DES.MODE_CBC)
+        tdes= DES3.new(self._ksenc,DES.MODE_CBC,b'\0'*8)
         response = tdes.decrypt(data[0:32])
         response_kicc = response[16:32]
         Kseed = self._xor(self._kifd, response_kicc)
@@ -225,12 +233,12 @@ class BAC(Logger):
         return (KSenc, KSmac, ssc)   
         
     def _xor(self, kifd, response_kicc):
-        kseed = ""
-        for i in range(len(binToHexRep(kifd))):
-            kseed += hex(int(binToHexRep(kifd)[i],16) \
-                         ^ int(binToHexRep(response_kicc)[i],16))[2:]
-        return hexRepToBin(kseed)
-    
+        kseed = b""
+        for i in range(len(kifd)):
+            kseed += struct.pack("B",kifd[i] ^ response_kicc[i])
+            #kseed += hex(int(binToHexRep(kifd)[i],16) ^ int(binToHexRep(response_kicc)[i],16))[2:]
+        #return hexRepToBin(kseed)
+        return kseed
     def mrz_information(self, mrz):
         """
         Take an MRZ object and construct the MRZ information out of the MRZ extracted informations:
@@ -269,7 +277,7 @@ class BAC(Logger):
         """
         
         self.log("Calculate the SHA-1 hash of MRZ_information")
-        kseedhash= sha1(str(kmrz))
+        kseedhash= sha1(rawbytes(kmrz))
         kseed = kseedhash.digest()
         self.log("\tHsha1(MRZ_information): " + binToHexRep(kseed))
         
@@ -300,7 +308,7 @@ class BAC(Logger):
         self.log("\tConcatenate Kseed and c")
         self.log("\t\tD: " + binToHexRep(d))
         
-        h = sha1(str(d)).digest()
+        h = sha1(d).digest()
         self.log("\tCalculate the SHA-1 hash of D")
         self.log("\t\tHsha1(D): " + binToHexRep(h))
         
@@ -317,16 +325,19 @@ class BAC(Logger):
         self.log("\tAdjust parity bits")
         self.log("\t\tKa: " + binToHexRep(Ka))
         self.log("\t\tKb: " + binToHexRep(Kb))
-        
+        print(binToHexRep(Ka+Kb))
         return Ka+Kb
     
     def DESParity(self, data):
-        adjusted= ''
+        adjusted= b''
         for x in range(len(data)):
-            y= ord(data[x]) & 0xfe
+            f = data[x]
+            if(type(f) == str):
+                f = ord(f)
+            y= f & 0xfe
             parity= 0
             for z in range(8):
                 parity += y >>  z & 1
-            adjusted += chr(y + (not parity % 2))
+            adjusted += (y + (not parity % 2)).to_bytes(1,'big')
         return adjusted
 

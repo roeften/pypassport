@@ -25,8 +25,15 @@ def binToHex(val):
 def binToHexRep(data):
     """'\xaa\xbb' --> 'aabb'"""
     string= ''
-    for x in range(len(data)):
-            string += '%02x' % ord(data[x])
+    
+    if(type(data) == int):
+        return '%02x' % data
+    
+    for x in range(len(data)):         
+            if(type(data[x]) == int):
+                string += '%02x' % data[x]
+            else:
+                string += '%02x' % ord(data[x])
     return string.upper()
 
 def binToHexList(data):
@@ -56,10 +63,10 @@ def hexToHexList(string):
 
 def hexRepToBin(string):
     """'AABB' --> \xaa\xbb'"""
-    output= ''
+    output= b''
     x= 0
     while x < len(string):
-            output += chr(int(string[x:x + 2],16))
+            output += struct.pack('B', int(string[x:x + 2],16))
             x += 2
     return output
 
@@ -98,7 +105,8 @@ def hexListToHexRep(data):
     """[0xAA, 0xBB] -> 'AABB4"""
     string= ''
     for d in data:
-        string += '%02X' % d
+        x = int(d)	
+        string += '%02X' % x
     return string.upper()
 
 def intToBin(data):
@@ -112,3 +120,23 @@ def intToHexRep(data, size=2):
 
 def intToHexList(data):
     return binToHexList(intToBin(data))
+    
+import struct
+
+def rawbytes(s):
+    """Convert a string to raw bytes without encoding"""
+    outlist = []
+    for cp in s:
+        if(type(cp) == int):
+            num = cp
+        else:
+            num = ord(cp)
+        if num < 255:
+            outlist.append(struct.pack('B', num))
+        elif num < 65535:
+            outlist.append(struct.pack('>H', num))
+        else:
+            b = (num & 0xFF0000) >> 16
+            H = num & 0xFFFF
+            outlist.append(struct.pack('>bH', b, H))
+    return b''.join(outlist)  

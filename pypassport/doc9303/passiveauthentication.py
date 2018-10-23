@@ -22,7 +22,6 @@ from pypassport.doc9303 import converter
 from pypassport.doc9303 import datagroup
 from hashlib import *
 from pypassport.derobjectidentifier import *
-from string import replace
 import subprocess
 from pypassport.logger import Logger
 from pypassport.camanager import CAManager

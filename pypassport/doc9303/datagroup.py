@@ -510,7 +510,7 @@ class DataGroupReader(Logger):
         return header[:self.offset]
         
     def _readBody(self):
-        body = ""
+        body = b""
         toRead = self._bodySize
         
         while not self.stop and toRead > self._maxSize:
@@ -528,7 +528,7 @@ class DataGroupReader(Logger):
         self.offset += len(tmp)
         body += tmp
         
-        if self._bodySize != len(body):
+        if self._bodySize > len(body):
             raise Exception("The file is not entirely read: expected: " + str(self._bodySize) + " read: " + str(len(body)))
         
         return body

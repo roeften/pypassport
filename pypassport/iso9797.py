@@ -21,9 +21,9 @@ from pypassport.hexfunctions import *
 
 def pad(toPad):
     size = 8
-    padBlock = "\x80" +  "\x00"*7
+    padBlock = b'\x80' +  b'\x00'*7
     left = size - (len(toPad) % size)
-    return toPad + padBlock[0:left]
+    return (toPad + padBlock[0:left])
 
 def unpad(tounpad):
     i=-1
@@ -47,18 +47,18 @@ def mac(key, msg):
 #        print 'MAC'
 #        print '---'
         
-        size = len(msg) / 8
-        y = '\x00'*8
+        size = int(len(msg) / 8)
+        y = b'\0'*8
         tdesa = DES.new(key[0:8], DES.MODE_CBC, y)
 #        print 'IV: ' + binToHexRep(y)
         
         for i in range(size):
-#            print 'x' + str(i) + ': ' + binToHexRep(msg[i*8:i*8+8])
+#            print('x' + str(i) + ': ' + binToHexRep(msg[i*8:i*8+8]))
             y = tdesa.encrypt(msg[i*8:i*8+8])
-#            print 'y' + str(i) + ': ' + binToHexRep(y)
+#            print('y' + str(i) + ': ' + binToHexRep(y))
             
-        tdesb = DES.new(key[8:16])
-        tdesa = DES.new(key[0:8])
+        tdesb = DES.new(key[8:16],DES.MODE_ECB)
+        tdesa = DES.new(key[0:8],DES.MODE_ECB)
         
         b = tdesb.decrypt(y)
 #        print 'b: ' + binToHexRep(b)

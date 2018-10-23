@@ -17,7 +17,6 @@
 # If not, see <http://www.gnu.org/licenses/>.
 
 import os, shutil
-from string import replace
 import subprocess
 from pypassport import hexfunctions
 from pypassport.logger import Logger
@@ -62,7 +61,7 @@ class OpenSSL(Logger):
         try:
             self._toDisk("certif.cer", certif)
             data = self._execute("verify -CApath "+trustedCertif+" certif.cer")       
-            data = replace(data, "certif.cer: ", "")
+            data = str.replace(data, "certif.cer: ", "")
         finally:
             self._remFromDisk("certif.cer")
 

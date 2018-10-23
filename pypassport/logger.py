@@ -18,7 +18,7 @@
 
 class Logger(object):
     def __init__(self, name):
-        self._listeners = []
+        self._listeners = [ ]
         self._name = name
         
     def register(self, fct):
