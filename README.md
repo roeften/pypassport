@@ -10,8 +10,12 @@ r = ReaderManager()
 reader = r.waitForCard()
 p = EPassport(reader,"YOURMRZINFO")
 p.register(print)
+p.setCSCADirectory("C:\\TEMP")
 p.doBasicAccessControl()
-p.readCom()
+p.doActiveAuthentication()
+
+p['DG2']
+
 ```
 
-But there are still conversion issues here and there in the code leading to trouble.
+If you find any conversion issues pls let me know.
