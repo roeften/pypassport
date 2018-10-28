@@ -241,7 +241,7 @@ class EPassport(dict, logger.Logger):
             return res
         except datagroup.DataGroupException as msg:
             res = msg
-            raise DataGroupException(msg)
+            raise datagroup.DataGroupException(msg)
         except openssl.OpenSSLException as msg:
             res = msg
             raise openssl.OpenSSLException(msg)

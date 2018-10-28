@@ -79,7 +79,7 @@ class ActiveAuthentication(Logger):
         
         self.RND_IFD = self._genRandom(8)
         self.signature = self._getSignature(self.RND_IFD)
-        self.F = self.p(dg15.body, self.signature)
+        self.F = self._decryptSignature(dg15.body, self.signature)
         
         (hash, hashSize, offset) = self._getHashAlgo(self.F)
         self.D = self._extractDigest(self.F, hashSize, offset)
@@ -142,11 +142,11 @@ class ActiveAuthentication(Logger):
         offset = None
         hashSize = None
         
-        if sig[-1] == hexRepToBin("BC"):
+        if sig[-1] == 0xBC:
             self.T = sig[-1]
             hash = sha1
             offset = -1
-        elif sig[-1] == hexRepToBin("CC"):
+        elif sig[-1] == 0xCC:
             self.T = sig[-2]
             #hash = The algorithm corresponding to the algo designed by T
             offset = -2
@@ -157,7 +157,7 @@ class ActiveAuthentication(Logger):
         self.log("\tT: " + binToHexRep(self.T))
                 
         #Find out the hash size
-        hashSize = len(hash("test").digest())
+        hashSize = len(hash(b"test").digest())
     
         return (hash, hashSize, offset)
     
