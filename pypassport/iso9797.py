@@ -27,11 +27,12 @@ def pad(toPad):
 
 def unpad(tounpad):
     i=-1
-    while tounpad[i] == "\x00":
+    while tounpad[i] == 0:
         i -= 1
         
-    if tounpad[i] == "\x80":
+    if tounpad[i] == 0x80:
         return tounpad[0:i]
+        
     else:
         #Pas de padding
         return tounpad

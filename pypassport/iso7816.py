@@ -127,7 +127,7 @@ class Iso7816(Logger):
             self.log(str(res)+" //" + msg)
             
             if msg == "Success":
-                return rawbytes(res.res)
+                return res.res
             else:
                 raise Iso7816Exception(msg, res.sw1, res.sw2)
         except KeyError as k:
@@ -159,7 +159,7 @@ class Iso7816(Logger):
     
     def internalAuthentication(self, rnd_ifd):
         data = binToHexRep(rnd_ifd)
-        lc = hexToHexRep(len(data)/2) 
+        lc = hexToHexRep(int(len(data)/2)) 
         toSend = apdu.CommandAPDU("00", "88", "00", "00", lc, data, "00")
         res = self.transmit(toSend, "Internal Authentication")
         return res

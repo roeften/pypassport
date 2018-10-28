@@ -51,7 +51,7 @@ def asn1Length(data):
         return (binToHex(data[1]), 2)
     if data[0] == 0x82:
         return (binToHex(data[1:3]), 3)
-    
+
     raise asn1Exception("Cannot decode the asn1 length from this field: " + binToHexRep(data))
 
 def toAsn1Length(data):

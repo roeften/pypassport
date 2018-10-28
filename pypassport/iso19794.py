@@ -270,7 +270,7 @@ class ISO19794_5:
         offset += 4
         result['ImageQuality'] = ISO19794_5_IMG_QUALITY[tag]
         
-        return (offset/2, result)
+        return ( int(offset/2), result)
     
     @staticmethod
     def createHeader(imageType, imageHeight, imageWidth, imageSize):

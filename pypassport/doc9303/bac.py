@@ -211,6 +211,7 @@ class BAC(Logger):
         @return: A set of two 16 bytes keys (KSenc, KSmac) and the SSC 
         """
         self.log("Decrypt and verify received data and compare received RND.IFD with generated RND.IFD " + binToHexRep(self._ksmac))
+        # this does not work, encryption with cards ksmac
         # mac(self._ksmac, data[0:32]) != data[32:]:
         #    raise Exception("The MAC value is not correct")
         
@@ -263,7 +264,7 @@ class BAC(Logger):
         self.log("\tDate of Expirity: " + mrz.dateOfExpiry[0] + "\tcheck digit: " + mrz.dateOfExpiry[1])
         self.log("\tMRZ_information: " + kmrz)
         
-        return kmrz
+        return kmrz.encode()
 
     def _genKseed(self, kmrz):
         """

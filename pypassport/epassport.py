@@ -241,7 +241,7 @@ class EPassport(dict, logger.Logger):
             return res
         except datagroup.DataGroupException as msg:
             res = msg
-            raise dgException(msg)
+            raise DataGroupException(msg)
         except openssl.OpenSSLException as msg:
             res = msg
             raise openssl.OpenSSLException(msg)
@@ -373,7 +373,9 @@ class EPassport(dict, logger.Logger):
         DataGroup <-> Tag correspondance 
         or have a look to the pypassport.datagroup.converter.py file       
         """
+        self.log("getitem " + tag)
         tag = converter.toTAG(tag)
+        self.log("getitem converted " + tag)
         if tag not in self:
             try:
                 tag = converter.toTAG(tag)
@@ -411,7 +413,9 @@ class EPassport(dict, logger.Logger):
         try:
             self.log("Reading " + converter.toDG(tag))
             dgFile = self._dgReader.readDG(tag)
+            self.log("File " + str(dgFile))
             dg = datagroup.DataGroupFactory().create(dgFile)
+            self.log("DG " + str(dg))
             self.__setitem__(dg.tag, dg) 
             return dg
         except IOError as msg:
@@ -460,6 +464,7 @@ class EPassport(dict, logger.Logger):
         try:
             cpt=1
             for A in dg2:
+                self.log("DG2 " + A)
                 if A == "A" + str(cpt):
                     cpt += 1
                     for tag in ["5F2E", "7F2E"]:
