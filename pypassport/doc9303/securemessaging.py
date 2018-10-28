@@ -127,11 +127,11 @@ class SecureMessaging(Ciphering):
         
         #DO'87'
         #Mandatory if data is returned, otherwise absent
-        if rapdu[0:1] == hexRepToBin("87"):
+        if rapdu[0] == 0x87:
             (encDataLength, o) = asn1Length(rapdu[1:])
             offset = 1 + o
                         
-            if rapdu[offset:offset+1] != hexRepToBin("01"):
+            if rapdu[offset] != 0x1:
                 raise SecureMessagingException("DO87 malformed, must be 87 L 01 <encdata> : " + binToHexRep(rapdu))
             
             do87 = rapdu[0:offset+encDataLength]
@@ -146,15 +146,15 @@ class SecureMessaging(Ciphering):
         sw2 = rapdu[offset+3]
         offset += 4
         needCC = True
-        
-        if do99[0:2] != hexRepToBin("9902"):
+        # removed hexRepToBin("9902"):
+        if do99[0:2] != b"\x99\x02":
             #SM error, return the error code
             return ResponseAPDU([], sw1, sw2)
 
         self.log(rapdu[offset])    
         #DO'8E'
         #Mandatory if DO'87' and/or DO'99' is present
-        if rapdu[offset:offset+1] == hexRepToBin("8E"):
+        if rapdu[offset] == 0x8E:
             ccLength = binToHex(rapdu[offset+1])
             CC = rapdu[offset+2:offset+2+ccLength]
             do8e = rapdu[offset:offset+2+ccLength]

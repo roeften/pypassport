@@ -105,7 +105,7 @@ class OpenSSL(Logger):
         
         #Verify if openSSL is installed
         self._execute("version")
-        
+        data = None
         try:
             self._toDisk("pubK", pubK)
             self._toDisk("signature", signature)
@@ -328,6 +328,9 @@ class OpenSSL(Logger):
         
         if ((not out) and err and not empty):
             raise OpenSSLException(err)
+        
+        if(err):
+            self.log(err)
         
         return out
     

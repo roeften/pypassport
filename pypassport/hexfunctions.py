@@ -27,7 +27,7 @@ def binToHexRep(data):
     string= ''
     
     if(type(data) == int):
-        return '%02x' % data
+        return ('%02x' % data).upper()
     
     for x in range(len(data)):         
             if(type(data[x]) == int):
@@ -103,11 +103,11 @@ def hexListToHex(data):
 
 def hexListToHexRep(data):
     """[0xAA, 0xBB] -> 'AABB4"""
-    string= ''
+    s= ''
     for d in data:
         x = int(d)	
-        string += '%02X' % x
-    return string.upper()
+        s += '%02X' % x
+    return s.upper()
 
 def intToBin(data):
     """13 -> d"""
@@ -124,6 +124,7 @@ def intToHexList(data):
 import struct
 
 def rawbytes(s):
+    return s
     """Convert a string to raw bytes without encoding"""
     outlist = []
     for cp in s:

@@ -48,7 +48,7 @@ class ActiveAuthentication(Logger):
             self._openssl = OpenSSL()
         else:
             self._openssl = openssl
-            
+        self._openssl.register(self.log)    
         self.RND_IFD = None
         self.F = None
         self.T = None
@@ -79,7 +79,7 @@ class ActiveAuthentication(Logger):
         
         self.RND_IFD = self._genRandom(8)
         self.signature = self._getSignature(self.RND_IFD)
-        self.F = self._decryptSignature(dg15.body, self.signature)
+        self.F = self.p(dg15.body, self.signature)
         
         (hash, hashSize, offset) = self._getHashAlgo(self.F)
         self.D = self._extractDigest(self.F, hashSize, offset)
@@ -122,6 +122,7 @@ class ActiveAuthentication(Logger):
         return self._openssl.retrieveRsaPubKey(dg15.body)
         
     def _decryptSignature(self, pubK, signature):
+
         data = self._openssl.retrieveSignedData(pubK, signature)
         self.log("Decrypt the signature with the public key")
         self.log("\tF: " + binToHexRep(data))

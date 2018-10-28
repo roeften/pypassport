@@ -251,6 +251,7 @@ class DataGroup2(DataGroup):
             tag = self._getTag()
             value = self._getValue()
             headerSize, data['meta'] = ISO19794_5.analyse(binToHexRep(value))
+           
             data[tag] = value[headerSize:]
             
             self[templateID] = {}
@@ -449,7 +450,7 @@ class DataGroupReader(Logger):
     Read a specific dataGroup from the passport.
     This is the superclass defining the interface for the classes implementing the reading.
     """
-    def __init__(self, iso7816, maxSize = 0xDF):
+    def __init__(self, iso7816, maxSize = 0xE0):
         """ 
         @param iso7816: The layer sending iso7816 apdu to the reader.
         @type iso7816: A iso7816 object
@@ -487,6 +488,7 @@ class DataGroupReader(Logger):
                 5F1A 0F     SMITH<<BRENDA<P
 
         """
+        self.log("READ DG " + dg)
         self.stop = False
         self.offset = 0
         self._selectFile(dg)
@@ -503,31 +505,35 @@ class DataGroupReader(Logger):
         header = self._iso7816.readBinary(self.offset, 4)
         (self._bodySize, self.offset) = asn1Length(header[1:])
         self.offset += 1
-                
+        self.log("Body Size: " + str(self._bodySize) + " Offset " + str(self.offset))        
         if(converter.toTAG(dg) != binToHexRep(header[0])):
-            raise Exception("Wrong AID: " + binToHexRep(header[0]) + " instead of " +  str(self.file.tag))
+            raise Exception("Wrong AID: " + binToHexRep(header[0]) + " instead of " +  converter.toTAG(dg))
         
         return header[:self.offset]
         
     def _readBody(self):
         body = b""
         toRead = self._bodySize
-        
         while not self.stop and toRead > self._maxSize:
             tmp = self._iso7816.readBinary(self.offset, self._maxSize)
             body += tmp
-            toRead -= self._maxSize
-            self.offset += self._maxSize
-            
+            l = len(tmp)
+            toRead -= l
+            self.offset += l
+            self.log("Read: " + str(l) + " Expected: " + str(self._maxSize))        
+
+                    
         if self.stop:
             self.log('reading aborded')
             self.stop = False
             raise Exception("reading aborded")
             
         tmp = self._iso7816.readBinary(self.offset, toRead)
-        self.offset += len(tmp)
+        l = len(tmp)
+        self.offset += l
         body += tmp
-        
+        self.log("Read: " + str(l) + " Expected: " + str(toRead))        
+
         if self._bodySize > len(body):
             raise Exception("The file is not entirely read: expected: " + str(self._bodySize) + " read: " + str(len(body)))
         
@@ -549,7 +555,7 @@ class FSDataGroupReader(DataGroupReader):
     Implement the superClass dataGroupReader.
     Implement the reading using FS 
     """
-    def __init__(self, iso7816, maxSize = 0xDF):
+    def __init__(self, iso7816, maxSize = 0xE0):
         DataGroupReader.__init__(self, iso7816, maxSize)
         
     def _selectFile(self, tag):
@@ -561,7 +567,7 @@ class SFIDataGroupReader(DataGroupReader):
     Implement the superClass dataGroupReader.
     Implement the reading using ShortFileIdentifier
     """
-    def __init__(self, iso7816, maxSize = 0xDF):
+    def __init__(self, iso7816, maxSize = 0xE0):
         DataGroupReader.__init__(self, iso7816, maxSize)
        
     def _selectFile(self, tag):
