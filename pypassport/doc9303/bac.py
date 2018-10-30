@@ -326,7 +326,6 @@ class BAC(Logger):
         self.log("\tAdjust parity bits")
         self.log("\t\tKa: " + binToHexRep(Ka))
         self.log("\t\tKb: " + binToHexRep(Kb))
-        print(binToHexRep(Ka+Kb))
         return Ka+Kb
     
     def DESParity(self, data):

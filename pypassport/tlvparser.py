@@ -50,6 +50,7 @@ class TLVParser(dict):
                 tag = self._getTag()
                 value = self._getValue()
                 self[tag] = value
+                
         except asn1Exception as exc:
             raise TLVParserException(exc[0])
             
