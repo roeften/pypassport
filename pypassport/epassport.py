@@ -179,6 +179,7 @@ class EPassport(dict, logger.Logger):
         
         self._CSCADirectory = None
         self._selectPassportApp()
+        
 
     def _getOpenSslDirectory(self):
         return self._openSSL.location
@@ -199,7 +200,7 @@ class EPassport(dict, logger.Logger):
         return self._iso7816
     
     def _isSecureMessaging(self):
-        return self._reader.isSecured()
+        return self._iso7816._ciphering
     
     def _selectPassportApp(self):
         """
@@ -383,6 +384,9 @@ class EPassport(dict, logger.Logger):
             except iso7816.Iso7816Exception as exc:
                 if exc[1] == 105 and exc[2] == 130:
                     #Security status not satisfied
+                    if self.isSecureMessaging:
+                        raise exc
+                        
                     self.log("Enabling Secure Messaging")
                     self.doBasicAccessControl()
                     return self._getDG(tag)

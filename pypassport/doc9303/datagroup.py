@@ -87,7 +87,7 @@ class DataGroup(TLVParser, DataGroupFile):
         TLVParser.__init__(self, self.body)
         
     def _getTag(self):
-        if (binToHex(self._data[self._byteNb]) & 0x0F == 0xF):
+        if ((binToHex(self._data[self._byteNb]) & 0x0F) == 0xF):
             tag = binToHexRep(self._data[self._byteNb:self._byteNb+2]).upper()
             self._byteNb += 2
         else:
@@ -151,32 +151,56 @@ class DataGroup1(DataGroup):
         data = self["5F1F"]
         docType = self._getMRZType(len(data))
         
-        if docType == "ID1":
+        if docType == "TD1":
             self._parseTd1(data)
         elif docType == "TD2":
             self._parseTd2(data)
-        else:
-            self._parseOther(data)
+        elif docType == "TD3":
+            self._parseTd3(data)            
             
         return self
 
     def _parseTd1(self, data):
+     
+        # doc code
         self["5F03"] = data[0:2]
+        # issuing state
         self["5F28"] = data[2:5]
+        # doc no (9 most significant digits)
         self["5A"] = data[5:14]
+        # Check digit — Document number or filler character (<) indicating document number exceeds nine characters
         self["5F04"] = data[14:15]
-        self["53"] = [data[15:30]]
+        
+        self["53"] = []
+        
+        # opt data or if doc no > 9 chars, least significant chars of doc no plus doc no check digit plus filler char
+        if(self["5F04"].decode() == '<'):
+            self["5A"] += data[15:28]
+        else:
+            self["53"].append(data[15:30])
+        
+        # DOB
         self["5F57"] = data[30:36]
+        #check digit DOB
         self["5F05"] = data[36:37]
+        #sex
         self["5F35"] = data[37:38]
+        #DOE
         self["59"] = data[38:44]
+        #check DOE
         self["5F06"] = data[44:45]
+        #nationality
         self["5F2C"] = data[45:48]
-        self["53"].append( data[48:59] )
+        #opt data
+        self["53"].append(data[48:59])
+        #comp check 
         self["5F07"] = data[59:60]
+        #name of holder
         self["5B"] = data[60:]
+
         
     def _parseTd2(self, data):
+        # TODO check if correct
         self["5F03"] = data[0:2]
         self["5F28"] = data[2:5]
         self["5B"] = data[5:36]
@@ -190,29 +214,48 @@ class DataGroup1(DataGroup):
         self["5F06"] = data[63:64]
         self["53"] = data[64:71]
         self["5F07"] = data[71:72]
-
-    def _parseOther(self, data):
+        
+ 
+        
+    def _parseTd3(self, data):
+        # document code 2bytes TAG 5F03 
         self["5F03"] = data[0:2]
+        # issuing state 3bytes TAG 5F28
         self["5F28"] = data[2:5]
+        # Name of holder 39bytes TAG 5B
+        #self["5F5B"] = " ".join(list(filter(None,data[5:44].decode().split('<'))))
         self["5F5B"] = data[5:44]
+        # Doc no 9bytes TAG 5A
         self["5A"]   = data[44:53]
-        self["5F04"] = data[53]
+        # check digit 1byte TAG 5F04
+        self["5F04"] = data[53:54]
+        # Nationality 3bytes TAG 5F2C
         self["5F2C"] = data[54:57]
+        # DOB 6bytes TAG 5F2B or 5F57
         self["5F57"] = data[57:63]
-        self["5F05"] = data[63]
-        self["5F35"] = data[64]
+        # check digit 1byte TAG 5F05
+        self["5F05"] = data[63:64]
+        # Sex 1byte TAG 5F35
+        self["5F35"] = data[64:65]
+        # DOE 6bytes TAG 59
         self["59"]   = data[65:71]
-        self["5F06"] = data[71]
+        # check digit 1byte TAG 5F06
+        self["5F06"] = data[71:72]
+        # Optional Data 14bytes TAG 53
         self["53"]   = data[72:86]
-        self["5F02"] = data[86]
-        self["5F07"] = data[87]
+        # check digit 1byte TAG 5F02
+        self["5F02"] = data[86:87]
+        # composite check digit 1byte TAG 5F07
+        self["5F07"] = data[87:88]
         
     def _getMRZType(self, length):
         if length == 0x5A:
             return "TD1"
         if length == 0x48:
             return "TD2"
-        return "OTHER"
+        if length == 0x58:
+            return "TD3"   
+        return None
     
 class DataGroup2(DataGroup):
     
@@ -534,7 +577,7 @@ class DataGroupReader(Logger):
         body += tmp
         self.log("Read: " + str(l) + " Expected: " + str(toRead))        
 
-        if self._bodySize > len(body):
+        if self._bodySize != len(body):
             raise Exception("The file is not entirely read: expected: " + str(self._bodySize) + " read: " + str(len(body)))
         
         return body
