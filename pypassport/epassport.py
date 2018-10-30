@@ -383,8 +383,10 @@ class EPassport(dict, logger.Logger):
                 return self._getDG(tag)
             except iso7816.Iso7816Exception as exc:
                 if exc[1] == 105 and exc[2] == 130:
-                    #Security status not satisfied
+                    #Security status not satisfied TODO support multiple levels of secure messaging
                     if self.isSecureMessaging:
+                        self.log("Security status not satisfied, while secure messaging. Will reset connection")
+                        self.reset()
                         raise exc
                         
                     self.log("Enabling Secure Messaging")
@@ -527,6 +529,9 @@ class EPassport(dict, logger.Logger):
         
         dgd.dumpData(self.getPublicKey(), "DG15PubKey.pk")
         dgd.dumpData(self.getCertificate(), "DocumentSigner.cer")
+      
+    def reset(self):
+        self._iso7816.reset()
         
     def _logFct(self, name, msg):
         self.log(msg, name)
