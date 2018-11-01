@@ -25,8 +25,8 @@ class Iso7816Exception(Exception):
     def __init__(self, *params):
         Exception.__init__(self, *params)
     def __getitem__(self, i):
-        return self.args[i]
-        
+        return self.args[i]       
+
 class Iso7816(Logger):
     
     Errors = {
@@ -46,7 +46,22 @@ class Iso7816(Logger):
                       0x87:'Non Volatile memory not available',\
                       0x88:'Key number not valid',\
                       0x89:'Key length is not correct',\
-                      0xC0:'Counter provided by X (valued from 0 to 15) (exact meaning depending on the command)'},
+                      0xC0:'Counter provided by 0 (exact meaning depending on the command)',\
+                      0xC1:'Counter provided by 1 (exact meaning depending on the command)',\
+                      0xC2:'Counter provided by 2 (exact meaning depending on the command)',\
+                      0xC3:'Counter provided by 3 (exact meaning depending on the command)',\
+                      0xC4:'Counter provided by 4 (exact meaning depending on the command)',\
+                      0xC5:'Counter provided by 5 (exact meaning depending on the command)',\
+                      0xC6:'Counter provided by 6 (exact meaning depending on the command)',\
+                      0xC7:'Counter provided by 7 (exact meaning depending on the command)',\
+                      0xC8:'Counter provided by 8 (exact meaning depending on the command)',\
+                      0xC9:'Counter provided by 9 (exact meaning depending on the command)',\
+                      0xCA:'Counter provided by 10 (exact meaning depending on the command)',\
+                      0xCB:'Counter provided by 11 (exact meaning depending on the command)',\
+                      0xCC:'Counter provided by 12 (exact meaning depending on the command)',\
+                      0xCD:'Counter provided by 13 (exact meaning depending on the command)',\
+                      0xCE:'Counter provided by 14 (exact meaning depending on the command)',\
+                      0xCF:'Counter provided by 15 (exact meaning depending on the command)'},
                 0x64:'State of non-volatile memory unchanged (SW2=00, other values are RFU)',
                 0x65:{0x00:'No information given',\
                       0x81:'Memory failure'},
@@ -62,8 +77,8 @@ class Iso7816(Logger):
                       0x84:'Referenced data invalidated',\
                       0x85:'Conditions of use not satisfied',\
                       0x86:'Command not allowed (no current EF)',\
-                      0x87:'Expected SM data objects missing',\
-                      0x88:'SM data objects incorrect'},
+                      0x87:'Expected secure messaging data objects missing',\
+                      0x88:'Incorrect secure messaging data objects'},
                 0x6A:{0x00:'No information given',\
                       0x80:'Incorrect parameters in the data field',\
                       0x81:'Function not supported',\
@@ -73,7 +88,9 @@ class Iso7816(Logger):
                       0x85:'Lc inconsistent with TLV structure',\
                       0x86:'Incorrect parameters P1-P2',\
                       0x87:'Lc inconsistent with P1-P2',\
-                      0x88:'Referenced data not found'},
+                      0x88:'Referenced data not found',\
+                      0x89:'File already exists',\
+                      0x8A:'DF name already exists'},
                 0x6B:{0x00:'Wrong parameter(s) P1-P2'},
                 0x6C:'Wrong length Le: SW2 indicates the exact length',
                 0x6D:{0x00:'Instruction code not supported or invalid'},
@@ -122,9 +139,10 @@ class Iso7816(Logger):
             if self._ciphering:
                 self.log("[SM] " + str(res))
                 res = self._ciphering.unprotect(res)
+                
             msg = Iso7816.Errors[res.sw1][res.sw2]
             
-            self.log(str(res)+" //" + msg)
+            self.log(str(res)+" // " + msg)
             
             if msg == "Success":
                 return res.res
@@ -163,6 +181,11 @@ class Iso7816(Logger):
         toSend = apdu.CommandAPDU("00", "88", "00", "00", lc, data, "00")
         res = self.transmit(toSend, "Internal Authentication")
         return res
+        
+    def reset(self):
+        self.setCiphering()
+        self._reader.disconnect()
+        self._reader.connect(self._reader.readerNum)
     
 #    def mutualAuthentication(self, data):
 #        data = binToHexRep(data)

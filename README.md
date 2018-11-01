@@ -18,7 +18,7 @@ p['DG2']
 
 ```
 
-The picture can be read and save as well:
+The picture can be read and saved as well:
 
 ```
 ....
@@ -29,7 +29,7 @@ from PIL import Image
 passportimage = p['DG2']['A1']['5F2E']
 imgfp = io.BytesIO(passportimage)
 img = Image.open(imgfp)
-img.save("c:\\TEMP\passport.png")
+img.save("c:\\TEMP\\passport.png")
 
 ```
 If you find any conversion issues pls let me know.

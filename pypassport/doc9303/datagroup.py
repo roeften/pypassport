@@ -143,9 +143,10 @@ class DataGroup1(DataGroup):
     """  
     Implement the DataGroup1 parsing
     """
+    
     def __init__(self, dgFile):
         DataGroup.__init__(self, dgFile)
-
+            
     def parse(self):
         super(DataGroup1, self).parse()
         data = self["5F1F"]
@@ -200,22 +201,32 @@ class DataGroup1(DataGroup):
 
         
     def _parseTd2(self, data):
-        # TODO check if correct
+        # document code 2bytes TAG 5F03 
         self["5F03"] = data[0:2]
+        # issuing state 3bytes TAG 5F28
         self["5F28"] = data[2:5]
+        #name of holder 31bytes 
         self["5B"] = data[5:36]
+        # Doc no 9bytes TAG 5A
         self["5A"] = data[36:45]
+        # check digit 1byte TAG 5F04
         self["5F04"] = data[45:46]
+        # Nationality 3bytes TAG 5F2C
         self["5F2C"] = data[46:49]
+        # DOB 6bytes TAG 5F2B or 5F57
         self["5F57"] = data[49:55]
+        # check digit 1byte TAG 5F05
         self["5F05"] = data[55:56]
+        # Sex 1byte TAG 5F35
         self["5F35"] = data[56:57]
+        # DOE 6bytes TAG 59
         self["59"] = data[57:63]
+        # check digit 1byte TAG 5F06
         self["5F06"] = data[63:64]
+        # Optional Data plus filler 14bytes TAG 53
         self["53"] = data[64:71]
-        self["5F07"] = data[71:72]
-        
- 
+        # composite check digit 1byte TAG 5F07
+        self["5F07"] = data[71:72]        
         
     def _parseTd3(self, data):
         # document code 2bytes TAG 5F03 
@@ -459,7 +470,17 @@ class SOD(DataGroup):
         
     def parse(self):
         return self
-    
+
+class CardAccess(DataGroup):
+    """ 
+    Implement the CardAccess parsing
+    """
+    def __init__(self, dgFile):
+        DataGroup.__init__(self, dgFile)
+        
+    def parse(self):
+        return self
+        
 class DataGroupFactory(Singleton, Logger):
     
     def __init__(self):
@@ -587,7 +608,8 @@ class DataGroupReader(Logger):
     
     def _setOffset(self, value):
         self._offset = value
-        if len(self._file.header) + value != 0:
+        l = len(self._file.header)
+        if (l+self._bodySize != 0) and (l + value != 0):
             v = int((float(value) / float((len(self._file.header) + self._bodySize)))*100)
             self.processed.log(v)
     
