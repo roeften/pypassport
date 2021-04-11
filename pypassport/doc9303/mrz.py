@@ -83,11 +83,11 @@ class MRZ(object):
         if mrz1[14] == "<":
             #Document number is bigger than 9 caracters
             tmp = mrz1[15:30].strip("<")
-            self._docNumber = mrz[5:14] + tmp[:-1]
+            self._docNumber = mrz1[5:14] + tmp[:-1]
             self._docNumberCD = tmp[-1]
         else:
-            self._docNumber = mrz[5:14]
-            self._docNumberCD = mrz[14]
+            self._docNumber = mrz1[5:14]
+            self._docNumberCD = mrz1[14]
             
         self._dateOfBirth = mrz2[0:6]
         self._dateOfBirthCD = mrz2[6]
