@@ -18,88 +18,88 @@
 
 import os
 import os.path
-import shutil
-from pypassport.logger import Logger
 
 CertFormat = ["PEM", "DER"]
-    
-class CAManager(object):
+
+
+class CAManager():
     """
     This object is used for the certificate validation.
-    It encapsulates the certificates directory and perform the certificate name conversion in its hash.0 format. 
+    It encapsulates the certificates directory and perform the certificate name conversion in its hash.0 format.
     """
-    def __init__(self, dir):
+
+    def __init__(self, dir_):
         """
-        @param dir: The directory with the root certificates
-        @type dir: A string
+        @param dir_: The directory with the root certificates
+        @type dir_: A string
         """
-        self._dir = dir
-    
+        self._dir = dir_
+
     def toHashes(self):
-        """ 
+        """
         For each certificate, create  a new certificate named with the hash value of the issuer followed with .0
         By this way, the corresponding CSCA certificate of the DS certificate can be found easily by openSSL.
         """
         for fileName in os.listdir(self.dir):
             file = self.dir + os.path.sep + fileName
-            
+
             if not fileName.endswith(".0") and fileName.endswith(".cer"):
-                (hash, format) = self._getHash(file)
-                hashName = hash + os.path.extsep + "0"
-                self._toPEM(file, format, hashName, self.dir + os.path.sep)
+                (hash_, format_) = self._getHash(file)
+                hashName = hash_ + os.path.extsep + "0"
+                self._toPEM(file, format_, hashName, self.dir + os.path.sep)
 
     def _getHash(self, file):
-        """ 
+        """
         Calculate the hash of the specified certificate.
-        
+
         @param file: The url of the certificate
         @type file: A string
         """
         data = None
-        format = None
-        for format in CertFormat:
-            #TODO: Deplacer le code openssl dans OpenSSL 
-            a = "openssl x509 -hash -in "+ file +" -inform "+format + " -noout"
+        format_ = None
+        for format_ in CertFormat:
+            # TODO: Deplacer le code openssl dans OpenSSL
+            a = "openssl x509 -hash -in " + file + " -inform " + format_ + " -noout"
             r = os.popen(a, "rb")
             data = r.read().strip()
             r.close()
-            f = format
-            if data: break
-            
+            if data:
+                break
+
         if not data:
             raise Exception("The certificate format is unknow for file: " + str(file) + "\nor OpenSSL is not set")
         return (data, format)
-    
-    def _toPEM(self, certif, format, name, path):
-        """ 
+
+    def _toPEM(self, certif, format_, name, path):
+        """
         Convert the certificate into the PEM format.
         If the certificate is already in PEM, do nothing.
-        
+
         @param certif: The url of the certificate to convert in PEM
         @type certif: A string
-        @param format: The format of the certificate, must be DER or PEM
-        @type format: A string
+        @param format_: The format of the certificate, must be DER or PEM
+        @type format_: A string
         @param name: The name of the resulting certificate
         @type name: A string
         @param path: The path where to store the certificate
         @type path: A string
-        
+
         @raise Exception: If the format parameter is not DER or PEM
         """
 #        if format == "PEM": return certif
 #        if format != "DER": raise Exception("Bad certificate format")
-        
-        a = "openssl x509 -in " + certif + " -inform " + format + " -outform PEM " + " -out " + path + name
+
+        a = "openssl x509 -in " + certif + " -inform " + format_ + " -outform PEM " + " -out " + path + name
         r = os.popen(a, "rb")
         data = r.read().strip()
         r.close()
-        
+
         return data
-    
+
     def _getDir(self):
-        """  
+        """
         Return the url of the directory where the certificates are stored.
         """
         return self._dir
-    
+
     dir = property(_getDir)

@@ -16,43 +16,44 @@
 # License along with pyPassport.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys
+import os
+import sys
+
 
 class jp2ConverterException(Exception):
     def __init__(self, *params):
         Exception.__init__(self, *params)
 
-def ConvertJp2(input):
-    """ 
+
+def ConvertJp2(input_):
+    """
     If the input is a jp2 picture, the image is transformed into bmp,
     else the image is returned without any modifications.
-    
-    @param input: A binary string representing the picture to convert
-    @type input: A string
-    @return: A binary string representing the picture in bmp, or the original input if the input is not a jp2 stream. 
+
+    @param input_: A binary string representing the picture to convert
+    @type input_: A string
+    @return: A binary string representing the picture in bmp, or the original input if the input is not a jp2 stream.
     """
-    
-    jp2 = open("tmp.jp2", "wb")
-    jp2.write(input)
-    jp2.close()
-    
+
+    with open("tmp.jp2", "wb") as jp2:
+        jp2.write(input_)
+
     local = ""
     if (sys.platform != "win32") and os.path.isfile('geojasper'):
         local = "./"
-    a=os.popen(local+"geojasper -f tmp.jp2 -F tmp.jpg")
+    a = os.popen(local+"geojasper -f tmp.jp2 -F tmp.jpg")
     a.close()
-    
+
     try:
-        f = open("tmp.jpg", "rb")
-        input = f.read()
-        f.close()
-    except IOError as msg:
+        with open("tmp.jpg", "rb") as f:
+            input_ = f.read()
+    except IOError:
         pass
     finally:
         try:
             os.remove("tmp.jp2")
             os.remove("tmp.jpg")
-        except:
+        except BaseException:
             pass
-        
-    return input
+
+    return input_

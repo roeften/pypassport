@@ -16,24 +16,23 @@
 # License along with pyPassport.
 # If not, see <http://www.gnu.org/licenses/>.
 
-class Logger(object):
+class Logger():
     def __init__(self, name):
-        self._listeners = [ ]
+        self._listeners = []
         self._name = name
-        
+
     def register(self, fct):
         """the listener gives the method he want as callback"""
         self._listeners.append(fct)
-        
+
     def unregister(self, listener):
         self._listeners.remove(listener)
-        
+
     def log(self, msg, name=None):
-        if name != None:
+        if name is not None:
             n = name
-        else: n = self._name
-        
+        else:
+            n = self._name
+
         for listenerFct in self._listeners:
             listenerFct(n, msg)
-            
-    

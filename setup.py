@@ -18,24 +18,24 @@
 
 from setuptools import setup, find_packages
 setup(
-    name = "pypassport",
-    version = "1.0",
+    name="pypassport",
+    version="1.0",
     description='Python Biometric Passport API',
     author='Jean-Francois Houzard & Olivier Roger',
     author_email='jhouzard@gmail.com & folkenda@gmail.com',
     url='http://code.google.com/p/pypassport/downloads/list',
-    packages = find_packages(),
-    
+    packages=find_packages(),
+
 
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
-    install_requires = ['setuptools', 'PyCryptodome', 'pyasn1', 'pyscard', 'Pillow'],
+    install_requires=['setuptools', 'PyCryptodome', 'pyasn1', 'pyscard', 'Pillow'],
 
-    package_data = {'': ['*.py'],
-                    'pypassport': ['README', 'LICENSE'],
-                    },
+    package_data={'': ['*.py'],
+                  'pypassport': ['README', 'LICENSE'],
+                  },
 
     # metadata for upload to PyPI
-    license = "LGPL",
-    keywords = "mrtd passport pypassport",
+    license="LGPL",
+    keywords="mrtd passport pypassport",
 )

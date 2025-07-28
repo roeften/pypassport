@@ -17,53 +17,53 @@
 # If not, see <http://www.gnu.org/licenses/>.
 
 from Crypto.Cipher import DES
-from pypassport.hexfunctions import *
+
 
 def pad(toPad):
     size = 8
-    padBlock = b'\x80' +  b'\x00'*7
+    padBlock = b'\x80' + b'\x00'*7
     left = size - (len(toPad) % size)
-    return (toPad + padBlock[0:left])
+    return toPad + padBlock[0:left]
+
 
 def unpad(tounpad):
-    i=-1
+    i = -1
     while tounpad[i] == 0:
         i -= 1
-        
+
     if tounpad[i] == 0x80:
         return tounpad[0:i]
-        
-    else:
-        #Pas de padding
-        return tounpad
-        
+
+    # Pas de padding
+    return tounpad
+
 
 def mac(key, msg):
-        #Source: PKI for machine readable travel document offering
-        #        ICC read-only access
-        #Release:1.1
-        #October 01,2004
-        #p46 of 57
-        
-#        print 'MAC'
-#        print '---'
-        
-        size = int(len(msg) / 8)
-        y = b'\0'*8
-        tdesa = DES.new(key[0:8], DES.MODE_CBC, y)
+    # Source: PKI for machine readable travel document offering
+    #        ICC read-only access
+    # Release:1.1
+    # October 01,2004
+    # p46 of 57
+
+    #        print 'MAC'
+    #        print '---'
+
+    size = int(len(msg) / 8)
+    y = b'\0'*8
+    tdesa = DES.new(key[0:8], DES.MODE_CBC, y)
 #        print 'IV: ' + binToHexRep(y)
-        
-        for i in range(size):
-#            print('x' + str(i) + ': ' + binToHexRep(msg[i*8:i*8+8]))
-            y = tdesa.encrypt(msg[i*8:i*8+8])
+
+    for i in range(size):
+        #            print('x' + str(i) + ': ' + binToHexRep(msg[i*8:i*8+8]))
+        y = tdesa.encrypt(msg[i*8:i*8+8])
 #            print('y' + str(i) + ': ' + binToHexRep(y))
-            
-        tdesb = DES.new(key[8:16],DES.MODE_ECB)
-        tdesa = DES.new(key[0:8],DES.MODE_ECB)
-        
-        b = tdesb.decrypt(y)
+
+    tdesb = DES.new(key[8:16], DES.MODE_ECB)
+    tdesa = DES.new(key[0:8], DES.MODE_ECB)
+
+    b = tdesb.decrypt(y)
 #        print 'b: ' + binToHexRep(b)
-        a = tdesa.encrypt(b)
+    a = tdesa.encrypt(b)
 #        print 'a: ' + binToHexRep(a)
-        
-        return a
+
+    return a
