@@ -89,10 +89,10 @@ class MRZ(object):
             self._docNumber = mrz1[5:14]
             self._docNumberCD = mrz1[14]
 
-        print( "DOB " + mrz2[0:6] )
-        print( "DOBCD " + mrz2[6] )
-        print( "Exp" + mrz2[8:14] )
-        print( "Exp" + mrz2[14] )
+        # print( "DOB " + mrz2[0:6] )
+        # print( "DOBCD " + mrz2[6] )
+        # print( "Exp" + mrz2[8:14] )
+        # print( "Exp" + mrz2[14] )
         
 
         self._dateOfBirth = mrz2[0:6]
@@ -122,12 +122,12 @@ class MRZ(object):
             self._docNumber = mrz[0:9]
             self._docNumberCD = mrz[9]
         
-        print("DOC " + mrz[0:9])
-        print("DOCCD " + mrz[9])
-        print("DOB " + mrz[13:19])
-        print("DOBCD " + mrz[19])
-        print("Exp " + mrz[21:27])
-        print("ExpCD " + mrz[27])
+        # print("DOC " + mrz[0:9])
+        # print("DOCCD " + mrz[9])
+        # print("DOB " + mrz[13:19])
+        # print("DOBCD " + mrz[19])
+        # print("Exp " + mrz[21:27])
+        # print("ExpCD " + mrz[27])
 
         self._dateOfBirth = mrz[13:19]
         self._dateOfBirthCD = mrz[19]
