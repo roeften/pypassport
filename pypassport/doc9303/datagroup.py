@@ -169,7 +169,7 @@ class DataGroup1(DataGroup):
         self["5F28"] = data[2:5]
         # doc no (9 most significant digits)
         self["5A"] = data[5:14]
-        # Check digit — Document number or filler character (<) indicating document number exceeds nine characters
+        # Check digit Document number or filler character (<) indicating document number exceeds nine characters
         self["5F04"] = data[14:15]
         
         self["53"] = []
