@@ -302,7 +302,7 @@ class EPassport(dict, logger.Logger):
             res = msg
             raise openssl.OpenSSLException(msg)
         except Exception as msg:
-        	res = msg
+            res = msg
         finally:
             self.log("Data Groups integrity verification: " + str(res))
             
